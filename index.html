@@ -6,7 +6,7 @@
     <title>Hava Durumu</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -17,40 +17,64 @@
 
         .container {
             text-align: center;
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            width: 60%;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .weather-icon {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
+            animation: spin 3s infinite linear;
         }
 
         .weather-info {
             font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .temperature {
+            font-size: 36px;
+            margin-top: 10px;
         }
 
         .sunny {
-            background-color: #f7c04a;
+            background-color: #ffdb4d;
         }
 
         .cloudy {
-            background-color: #b3c7d6;
+            background-color: #88b0c0;
         }
 
         .rainy {
-            background-color: #a3a3a3;
+            background-color: #565656;
         }
 
         .snowy {
-            background-color: #d1f0f1;
+            background-color: #d0e5f1;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hover-effect:hover {
+            cursor: pointer;
+            transform: scale(1.1);
+            transition: transform 0.3s ease-in-out;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hava Durumu</h1>
-        <img id="weather-icon" class="weather-icon" src="" alt="Weather Icon">
+        <img id="weather-icon" class="weather-icon hover-effect" src="" alt="Weather Icon">
         <div class="weather-info" id="weather-info"></div>
-        <div id="temperature"></div>
+        <div id="temperature" class="temperature"></div>
     </div>
 
     <script>
@@ -71,10 +95,10 @@
 
                 // Hava durumu ikonu
                 document.getElementById('weather-icon').src = weatherIcon;
-                
+
                 // Hava durumu açıklaması
                 document.getElementById('weather-info').innerText = description;
-                
+
                 // Sıcaklık
                 document.getElementById('temperature').innerText = `${temp}°C`;
 
@@ -88,6 +112,10 @@
                 } else if (weather === 'snow') {
                     document.body.className = 'snowy';
                 }
+
+                // Sesli hava durumu (Opsiyonel)
+                const weatherSpeech = new SpeechSynthesisUtterance(`Bugün hava durumu ${description}. Sıcaklık ${temp} derece.`);
+                window.speechSynthesis.speak(weatherSpeech);
             })
             .catch(error => console.error('API veri çekme hatası:', error));
     </script>
