@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hava Durumu</title>
+    <!-- Font Awesome Kütüphanesini ekleyin -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -122,9 +124,15 @@
         <img id="weather-icon" class="weather-icon hover-effect" src="" alt="Weather Icon">
         <div class="weather-info" id="weather-info"></div>
         <div id="temperature" class="temperature"></div>
-        <div id="feels-like" class="additional-info"></div>
-        <div id="wind-speed" class="additional-info"></div>
-        <div id="humidity" class="additional-info"></div>
+        <div id="feels-like" class="additional-info">
+            <i class="fas fa-thermometer-half"></i> <span>Hissedilen: 12.18°C</span>
+        </div>
+        <div id="wind-speed" class="additional-info">
+            <i class="fas fa-wind"></i> <span>Rüzgar Hızı: 2.06 m/s</span>
+        </div>
+        <div id="humidity" class="additional-info">
+            <i class="fas fa-tint"></i> <span>Nem Oranı: 39%</span>
+        </div>
     </div>
 
     <script>
