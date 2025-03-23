@@ -15,7 +15,7 @@
             flex-direction: column;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            transition: background-color 1s ease;
         }
         .container {
             text-align: center;
@@ -30,16 +30,31 @@
             margin-top: 20px;
         }
         .weather-icon {
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             position: absolute;
-            transform: translate(-50%, -50%);
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .sunny-bg {
+            background-color: #ffdb4d;
+        }
+        .cloudy-bg {
+            background-color: #a8a8a8;
+        }
+        .rainy-bg {
+            background-color: #5f5f5f;
+        }
+        .snowy-bg {
+            background-color: #d0e5f1;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hava Durumu</h1>
+        <img id="weather-icon" class="weather-icon" src="" alt="Weather Icon">
         <div id="temperature" class="temperature"></div>
         <div id="weather-info" class="weather-info"></div>
         <canvas id="temperatureChart" width="400" height="200"></canvas>
@@ -58,6 +73,7 @@
                 const temperatures = [];
                 const timeLabels = [];
                 const icons = [];
+                let weatherCondition = '';
 
                 // Verileri çek ve grafik için hazırla
                 data.list.forEach(item => {
@@ -65,11 +81,31 @@
                     const hour = time.getHours();
                     const temp = item.main.temp;
                     const iconCode = item.weather[0].icon;
+                    const condition = item.weather[0].main.toLowerCase();
 
                     timeLabels.push(`${hour}:00`);
                     temperatures.push(temp);
                     icons.push(`https://openweathermap.org/img/wn/${iconCode}.png`);
+
+                    // İlk öğe, hava durumunu belirlemek için kullanılıyor
+                    if (!weatherCondition) weatherCondition = condition;
                 });
+
+                // Hava durumu simgesini ve arka plan rengini ayarla
+                const weatherIcon = document.getElementById('weather-icon');
+                if (weatherCondition === 'clear') {
+                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/sun.png";  // Güneş ikonu
+                    document.body.className = 'sunny-bg'; // Güneşli arka plan
+                } else if (weatherCondition === 'clouds') {
+                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/cloud.png";  // Bulut ikonu
+                    document.body.className = 'cloudy-bg'; // Bulutlu arka plan
+                } else if (weatherCondition === 'rain') {
+                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/rain.png";  // Yağmur ikonu
+                    document.body.className = 'rainy-bg'; // Yağmurlu arka plan
+                } else if (weatherCondition === 'snow') {
+                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/snow.png";  // Kar ikonu
+                    document.body.className = 'snowy-bg'; // Karlı arka plan
+                }
 
                 // Chart.js grafiği oluşturma
                 const ctx = document.getElementById('temperatureChart').getContext('2d');
@@ -83,7 +119,7 @@
                             borderColor: 'rgb(75, 192, 192)',
                             borderWidth: 2,
                             fill: false,
-                            pointRadius: 5,  // Noktaları biraz daha büyük yapıyoruz
+                            pointRadius: 5,
                             pointBackgroundColor: 'rgb(75, 192, 192)',
                             pointBorderColor: '#fff',
                         }]
@@ -92,21 +128,6 @@
                         scales: {
                             y: {
                                 beginAtZero: false
-                            }
-                        },
-                        plugins: {
-                            afterDatasetsDraw: function(chart) {
-                                const ctx = chart.ctx;
-                                chart.data.datasets[0].data.forEach((value, index) => {
-                                    const x = chart.scales['x'].getPixelForValue(index);
-                                    const y = chart.scales['y'].getPixelForValue(value);
-                                    const icon = new Image();
-                                    icon.src = icons[index];
-                                    icon.onload = function() {
-                                        // İkonu çiz
-                                        ctx.drawImage(icon, x - 15, y - 40, 30, 30);
-                                    }
-                                });
                             }
                         }
                     }
