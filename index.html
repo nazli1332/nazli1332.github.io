@@ -41,6 +41,11 @@
             margin-top: 10px;
         }
 
+        .additional-info {
+            font-size: 20px;
+            margin-top: 15px;
+        }
+
         /* Yağmur animasyonu */
         .rainy {
             background-color: #565656;
@@ -117,6 +122,9 @@
         <img id="weather-icon" class="weather-icon hover-effect" src="" alt="Weather Icon">
         <div class="weather-info" id="weather-info"></div>
         <div id="temperature" class="temperature"></div>
+        <div id="feels-like" class="additional-info"></div>
+        <div id="wind-speed" class="additional-info"></div>
+        <div id="humidity" class="additional-info"></div>
     </div>
 
     <script>
@@ -131,6 +139,9 @@
             .then(data => {
                 const weather = data.weather[0].main.toLowerCase();
                 const temp = data.main.temp;
+                const feelsLike = data.main.feels_like;
+                const windSpeed = data.wind.speed;
+                const humidity = data.main.humidity;
                 const iconCode = data.weather[0].icon;
                 const weatherIcon = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
                 const description = data.weather[0].description;
@@ -143,6 +154,15 @@
 
                 // Sıcaklık
                 document.getElementById('temperature').innerText = `${temp}°C`;
+
+                // Hissedilen sıcaklık
+                document.getElementById('feels-like').innerText = `Hissedilen: ${feelsLike}°C`;
+
+                // Rüzgar hızı
+                document.getElementById('wind-speed').innerText = `Rüzgar Hızı: ${windSpeed} m/s`;
+
+                // Nem oranı
+                document.getElementById('humidity').innerText = `Nem Oranı: ${humidity}%`;
 
                 // Arka plan rengi ve animasyonlar
                 if (weather === 'clear') {
@@ -159,7 +179,7 @@
                 }
 
                 // Sesli hava durumu (Opsiyonel)
-                const weatherSpeech = new SpeechSynthesisUtterance(`Bugün hava durumu ${description}. Sıcaklık ${temp} derece.`);
+                const weatherSpeech = new SpeechSynthesisUtterance(`Bugün hava durumu ${description}. Sıcaklık ${temp} derece. Hissedilen sıcaklık ${feelsLike} derece. Rüzgar hızı ${windSpeed} metre/saniye.`);
                 window.speechSynthesis.speak(weatherSpeech);
             })
             .catch(error => console.error('API veri çekme hatası:', error));
