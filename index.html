@@ -41,6 +41,57 @@
             margin-top: 10px;
         }
 
+        /* Yağmur animasyonu */
+        .rainy {
+            background-color: #565656;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rainAnimation 0.5s linear infinite;
+        }
+
+        .rain div {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            width: 3px;
+            height: 20px;
+            animation: rainDrop 0.5s linear infinite;
+        }
+
+        /* Rüzgar animasyonu */
+        .wind {
+            background-color: #88b0c0;
+            animation: windMove 5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes rainAnimation {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+
+        @keyframes rainDrop {
+            0% { top: -10px; }
+            100% { top: 100%; }
+        }
+
+        @keyframes windMove {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .sunny {
             background-color: #ffdb4d;
         }
@@ -49,17 +100,8 @@
             background-color: #88b0c0;
         }
 
-        .rainy {
-            background-color: #565656;
-        }
-
         .snowy {
             background-color: #d0e5f1;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         .hover-effect:hover {
@@ -109,8 +151,11 @@
                     document.body.className = 'cloudy';
                 } else if (weather === 'rain') {
                     document.body.className = 'rainy';
+                    addRainEffect();
                 } else if (weather === 'snow') {
                     document.body.className = 'snowy';
+                } else if (weather === 'wind') {
+                    document.body.className = 'wind';
                 }
 
                 // Sesli hava durumu (Opsiyonel)
@@ -118,6 +163,21 @@
                 window.speechSynthesis.speak(weatherSpeech);
             })
             .catch(error => console.error('API veri çekme hatası:', error));
+
+        // Yağmur efekti ekleme
+        function addRainEffect() {
+            const rain = document.createElement('div');
+            rain.classList.add('rain');
+            document.body.appendChild(rain);
+
+            // Yağmur damlaları eklemek
+            for (let i = 0; i < 50; i++) {
+                const drop = document.createElement('div');
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
+                rain.appendChild(drop);
+            }
+        }
     </script>
 </body>
 </html>
