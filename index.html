@@ -49,11 +49,24 @@
         .snowy-bg {
             background-color: #d0e5f1;
         }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hava Durumu</h1>
+        <select id="city-select">
+            <option value="Istanbul">İstanbul</option>
+            <option value="Ankara">Ankara</option>
+            <option value="Izmir">İzmir</option>
+            <option value="Antalya">Antalya</option>
+            <option value="Bursa">Bursa</option>
+        </select>
         <img id="weather-icon" class="weather-icon" src="" alt="Weather Icon">
         <div id="temperature" class="temperature"></div>
         <div id="weather-info" class="weather-info"></div>
@@ -61,87 +74,96 @@
     </div>
 
     <script>
-        // API Key ve şehir adınızı burada girin
-        const apiKey = '29234e3918abf4ff5865f5d2e8cd2aa2'; // Kendi API anahtarınızı buraya ekleyin
-        const city = 'Istanbul'; // Şehir adını buraya girin
-        const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
+        // API Key ve başlangıç şehri
+        const apiKey = '29234e3918abf4ff5865f5d2e8cd2aa2';
+        let city = 'Istanbul'; // Başlangıçta İstanbul seçili
+        const apiUrl = (city) => `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
 
-        // API'den veri çekme
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                const temperatures = [];
-                const timeLabels = [];
-                const icons = [];
-                let weatherCondition = '';
+        // Şehir seçimi değiştiğinde hava durumu verilerini güncelle
+        document.getElementById('city-select').addEventListener('change', function() {
+            city = this.value;
+            fetchWeatherData(city);
+        });
 
-                // Verileri çek ve grafik için hazırla
-                data.list.forEach(item => {
-                    const time = new Date(item.dt * 1000);
-                    const hour = time.getHours();
-                    const temp = item.main.temp;
-                    const iconCode = item.weather[0].icon;
-                    const condition = item.weather[0].main.toLowerCase();
+        // Hava durumu verilerini API'den çekme
+        function fetchWeatherData(city) {
+            fetch(apiUrl(city))
+                .then(response => response.json())
+                .then(data => {
+                    const temperatures = [];
+                    const timeLabels = [];
+                    const icons = [];
+                    let weatherCondition = '';
 
-                    timeLabels.push(`${hour}:00`);
-                    temperatures.push(temp);
-                    icons.push(`https://openweathermap.org/img/wn/${iconCode}.png`);
+                    data.list.forEach(item => {
+                        const time = new Date(item.dt * 1000);
+                        const hour = time.getHours();
+                        const temp = item.main.temp;
+                        const iconCode = item.weather[0].icon;
+                        const condition = item.weather[0].main.toLowerCase();
 
-                    // İlk öğe, hava durumunu belirlemek için kullanılıyor
-                    if (!weatherCondition) weatherCondition = condition;
-                });
+                        timeLabels.push(`${hour}:00`);
+                        temperatures.push(temp);
+                        icons.push(`https://openweathermap.org/img/wn/${iconCode}.png`);
 
-                // Hava durumu simgesini ve arka plan rengini ayarla
-                const weatherIcon = document.getElementById('weather-icon');
-                if (weatherCondition === 'clear') {
-                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/sun.png";  // Güneş ikonu
-                    document.body.className = 'sunny-bg'; // Güneşli arka plan
-                } else if (weatherCondition === 'clouds') {
-                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/cloud.png";  // Bulut ikonu
-                    document.body.className = 'cloudy-bg'; // Bulutlu arka plan
-                } else if (weatherCondition === 'rain') {
-                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/rain.png";  // Yağmur ikonu
-                    document.body.className = 'rainy-bg'; // Yağmurlu arka plan
-                } else if (weatherCondition === 'snow') {
-                    weatherIcon.src = "https://img.icons8.com/ios/50/000000/snow.png";  // Kar ikonu
-                    document.body.className = 'snowy-bg'; // Karlı arka plan
-                }
+                        if (!weatherCondition) weatherCondition = condition;
+                    });
 
-                // Chart.js grafiği oluşturma
-                const ctx = document.getElementById('temperatureChart').getContext('2d');
-                const temperatureChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: timeLabels,
-                        datasets: [{
-                            label: 'Sıcaklık (°C)',
-                            data: temperatures,
-                            borderColor: 'rgb(75, 192, 192)',
-                            borderWidth: 2,
-                            fill: false,
-                            pointRadius: 5,
-                            pointBackgroundColor: 'rgb(75, 192, 192)',
-                            pointBorderColor: '#fff',
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: false
+                    // Hava durumu simgesini ve arka plan rengini ayarla
+                    const weatherIcon = document.getElementById('weather-icon');
+                    if (weatherCondition === 'clear') {
+                        weatherIcon.src = "https://img.icons8.com/ios/50/000000/sun.png";  // Güneş ikonu
+                        document.body.className = 'sunny-bg'; // Güneşli arka plan
+                    } else if (weatherCondition === 'clouds') {
+                        weatherIcon.src = "https://img.icons8.com/ios/50/000000/cloud.png";  // Bulut ikonu
+                        document.body.className = 'cloudy-bg'; // Bulutlu arka plan
+                    } else if (weatherCondition === 'rain') {
+                        weatherIcon.src = "https://img.icons8.com/ios/50/000000/rain.png";  // Yağmur ikonu
+                        document.body.className = 'rainy-bg'; // Yağmurlu arka plan
+                    } else if (weatherCondition === 'snow') {
+                        weatherIcon.src = "https://img.icons8.com/ios/50/000000/snow.png";  // Kar ikonu
+                        document.body.className = 'snowy-bg'; // Karlı arka plan
+                    }
+
+                    // Chart.js grafiği oluşturma
+                    const ctx = document.getElementById('temperatureChart').getContext('2d');
+                    const temperatureChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: timeLabels,
+                            datasets: [{
+                                label: 'Sıcaklık (°C)',
+                                data: temperatures,
+                                borderColor: 'rgb(75, 192, 192)',
+                                borderWidth: 2,
+                                fill: false,
+                                pointRadius: 5,
+                                pointBackgroundColor: 'rgb(75, 192, 192)',
+                                pointBorderColor: '#fff',
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: false
+                                }
                             }
                         }
-                    }
-                });
+                    });
 
-                // Hava durumu açıklaması
-                const description = data.list[0].weather[0].description;
-                document.getElementById('weather-info').innerText = `Hava durumu: ${description}`;
+                    // Hava durumu açıklaması
+                    const description = data.list[0].weather[0].description;
+                    document.getElementById('weather-info').innerText = `Hava durumu: ${description}`;
 
-                // Sıcaklık
-                const temp = data.list[0].main.temp;
-                document.getElementById('temperature').innerText = `Sıcaklık: ${temp}°C`;
-            })
-            .catch(error => console.error('API veri çekme hatası:', error));
+                    // Sıcaklık
+                    const temp = data.list[0].main.temp;
+                    document.getElementById('temperature').innerText = `Sıcaklık: ${temp}°C`;
+                })
+                .catch(error => console.error('API veri çekme hatası:', error));
+        }
+
+        // Başlangıç verisini yükle (İstanbul)
+        fetchWeatherData(city);
     </script>
 </body>
 </html>
