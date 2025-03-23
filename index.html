@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hava Durumu</title>
-    <!-- Font Awesome Kütüphanesini ekleyin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -12,200 +12,88 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             height: 100vh;
             margin: 0;
-            transition: background-color 0.5s;
+            background-color: #f0f0f0;
         }
-
         .container {
             text-align: center;
-            color: white;
+            color: black;
             border-radius: 10px;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            width: 60%;
+            background: rgba(255, 255, 255, 0.8);
+            width: 80%;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
         }
-
-        .weather-icon {
-            width: 120px;
-            height: 120px;
-            animation: spin 3s infinite linear;
-        }
-
-        .weather-info {
-            font-size: 24px;
+        canvas {
             margin-top: 20px;
-        }
-
-        .temperature {
-            font-size: 36px;
-            margin-top: 10px;
-        }
-
-        .additional-info {
-            font-size: 20px;
-            margin-top: 15px;
-        }
-
-        /* Yağmur animasyonu */
-        .rainy {
-            background-color: #565656;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .rain {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            animation: rainAnimation 0.5s linear infinite;
-        }
-
-        .rain div {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.8);
-            width: 3px;
-            height: 20px;
-            animation: rainDrop 0.5s linear infinite;
-        }
-
-        /* Rüzgar animasyonu */
-        .wind {
-            background-color: #88b0c0;
-            animation: windMove 5s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes rainAnimation {
-            0% { top: -100%; }
-            100% { top: 100%; }
-        }
-
-        @keyframes rainDrop {
-            0% { top: -10px; }
-            100% { top: 100%; }
-        }
-
-        @keyframes windMove {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .sunny {
-            background-color: #ffdb4d;
-        }
-
-        .cloudy {
-            background-color: #88b0c0;
-        }
-
-        .snowy {
-            background-color: #d0e5f1;
-        }
-
-        .hover-effect:hover {
-            cursor: pointer;
-            transform: scale(1.1);
-            transition: transform 0.3s ease-in-out;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hava Durumu</h1>
-        <img id="weather-icon" class="weather-icon hover-effect" src="" alt="Weather Icon">
-        <div class="weather-info" id="weather-info"></div>
         <div id="temperature" class="temperature"></div>
-        <div id="feels-like" class="additional-info">
-            <i class="fas fa-thermometer-half"></i> <span>Hissedilen: 12.18°C</span>
-        </div>
-        <div id="wind-speed" class="additional-info">
-            <i class="fas fa-wind"></i> <span>Rüzgar Hızı: 2.06 m/s</span>
-        </div>
-        <div id="humidity" class="additional-info">
-            <i class="fas fa-tint"></i> <span>Nem Oranı: 39%</span>
-        </div>
+        <div id="weather-info" class="weather-info"></div>
+        <canvas id="temperatureChart" width="400" height="200"></canvas>
     </div>
 
     <script>
         // API Key ve şehir adınızı burada girin
         const apiKey = '29234e3918abf4ff5865f5d2e8cd2aa2'; // Kendi API anahtarınızı buraya ekleyin
         const city = 'Istanbul'; // Şehir adını buraya girin
-        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
+        const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
 
         // API'den veri çekme
         fetch(apiUrl)
             .then(response => response.json())
             .then(data => {
-                const weather = data.weather[0].main.toLowerCase();
-                const temp = data.main.temp;
-                const feelsLike = data.main.feels_like;
-                const windSpeed = data.wind.speed;
-                const humidity = data.main.humidity;
-                const iconCode = data.weather[0].icon;
-                const weatherIcon = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-                const description = data.weather[0].description;
+                const temperatures = [];
+                const timeLabels = [];
+                
+                // Verileri çek ve grafik için hazırla
+                data.list.forEach(item => {
+                    const time = new Date(item.dt * 1000);
+                    const hour = time.getHours();
+                    const temp = item.main.temp;
 
-                // Hava durumu ikonu
-                document.getElementById('weather-icon').src = weatherIcon;
+                    timeLabels.push(`${hour}:00`);
+                    temperatures.push(temp);
+                });
+
+                // Chart.js grafiği oluşturma
+                const ctx = document.getElementById('temperatureChart').getContext('2d');
+                const temperatureChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: timeLabels,
+                        datasets: [{
+                            label: 'Sıcaklık (°C)',
+                            data: temperatures,
+                            borderColor: 'rgb(75, 192, 192)',
+                            borderWidth: 2,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: false
+                            }
+                        }
+                    }
+                });
 
                 // Hava durumu açıklaması
-                document.getElementById('weather-info').innerText = description;
+                const description = data.list[0].weather[0].description;
+                document.getElementById('weather-info').innerText = `Hava durumu: ${description}`;
 
                 // Sıcaklık
-                document.getElementById('temperature').innerText = `${temp}°C`;
-
-                // Hissedilen sıcaklık
-                document.getElementById('feels-like').innerText = `Hissedilen: ${feelsLike}°C 🌡️`;
-
-                // Rüzgar hızı
-                document.getElementById('wind-speed').innerText = `Rüzgar Hızı: ${windSpeed} m/s 🌬️`;
-
-                // Nem oranı
-                document.getElementById('humidity').innerText = `Nem Oranı: ${humidity}% 💧`;
-
-                // Arka plan rengi ve animasyonlar
-                if (weather === 'clear') {
-                    document.body.className = 'sunny';
-                } else if (weather === 'clouds') {
-                    document.body.className = 'cloudy';
-                } else if (weather === 'rain') {
-                    document.body.className = 'rainy';
-                    addRainEffect();
-                } else if (weather === 'snow') {
-                    document.body.className = 'snowy';
-                } else if (weather === 'wind') {
-                    document.body.className = 'wind';
-                }
-
-                // Sesli hava durumu (Opsiyonel)
-                const weatherSpeech = new SpeechSynthesisUtterance(`Bugün hava durumu ${description}. Sıcaklık ${temp} derece. Hissedilen sıcaklık ${feelsLike} derece. Rüzgar hızı ${windSpeed} metre/saniye.`);
-                window.speechSynthesis.speak(weatherSpeech);
+                const temp = data.list[0].main.temp;
+                document.getElementById('temperature').innerText = `Sıcaklık: ${temp}°C`;
             })
             .catch(error => console.error('API veri çekme hatası:', error));
-
-        // Yağmur efekti ekleme
-        function addRainEffect() {
-            const rain = document.createElement('div');
-            rain.classList.add('rain');
-            document.body.appendChild(rain);
-
-            // Yağmur damlaları eklemek
-            for (let i = 0; i < 50; i++) {
-                const drop = document.createElement('div');
-                drop.style.left = `${Math.random() * 100}%`;
-                drop.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
-                rain.appendChild(drop);
-            }
-        }
     </script>
 </body>
 </html>
