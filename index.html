@@ -29,6 +29,12 @@
         canvas {
             margin-top: 20px;
         }
+        .weather-icon {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
     </style>
 </head>
 <body>
@@ -51,15 +57,18 @@
             .then(data => {
                 const temperatures = [];
                 const timeLabels = [];
-                
+                const icons = [];
+
                 // Verileri çek ve grafik için hazırla
                 data.list.forEach(item => {
                     const time = new Date(item.dt * 1000);
                     const hour = time.getHours();
                     const temp = item.main.temp;
+                    const iconCode = item.weather[0].icon;
 
                     timeLabels.push(`${hour}:00`);
                     temperatures.push(temp);
+                    icons.push(`https://openweathermap.org/img/wn/${iconCode}.png`);
                 });
 
                 // Chart.js grafiği oluşturma
@@ -73,13 +82,31 @@
                             data: temperatures,
                             borderColor: 'rgb(75, 192, 192)',
                             borderWidth: 2,
-                            fill: false
+                            fill: false,
+                            pointRadius: 5,  // Noktaları biraz daha büyük yapıyoruz
+                            pointBackgroundColor: 'rgb(75, 192, 192)',
+                            pointBorderColor: '#fff',
                         }]
                     },
                     options: {
                         scales: {
                             y: {
                                 beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            afterDatasetsDraw: function(chart) {
+                                const ctx = chart.ctx;
+                                chart.data.datasets[0].data.forEach((value, index) => {
+                                    const x = chart.scales['x'].getPixelForValue(index);
+                                    const y = chart.scales['y'].getPixelForValue(value);
+                                    const icon = new Image();
+                                    icon.src = icons[index];
+                                    icon.onload = function() {
+                                        // İkonu çiz
+                                        ctx.drawImage(icon, x - 15, y - 40, 30, 30);
+                                    }
+                                });
                             }
                         }
                     }
