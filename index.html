@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hava Durumu</title>
+    <!-- Font Awesome Kütüphanesini ekleyin -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,7 +16,12 @@
             height: 100vh;
             margin: 0;
             background-color: #f4f4f9;
+            background-image: url('https://www.transparenttextures.com/patterns/diagonal-stripes.png'); /* Fallback arka plan */
+            background-size: cover;
+            background-position: center;
+            transition: background-color 0.5s ease;
         }
+
         .container {
             text-align: center;
             color: white;
@@ -23,33 +29,79 @@
             padding: 20px;
             background: rgba(0, 0, 0, 0.6);
             width: 60%;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
         }
+
         .weather-icon {
             width: 120px;
             height: 120px;
         }
+
+        .weather-info {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
         .temperature {
             font-size: 36px;
+            margin-top: 10px;
         }
+
         .additional-info {
             font-size: 20px;
             margin-top: 15px;
         }
+
         select {
             padding: 10px;
+            margin: 20px;
             font-size: 16px;
             border-radius: 5px;
+            border: 1px solid #ddd;
         }
+
         #weather-chart {
             width: 100%;
             max-width: 400px;
             margin: 20px auto;
+        }
+
+        .hover-effect:hover {
+            cursor: pointer;
+            transform: scale(1.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Gökyüzü Efektleri */
+        .sunny {
+            background-color: #87CEEB; /* Açık Mavi */
+            background-image: url('https://images.unsplash.com/photo-1503024946999-4705ecb81347'); /* Güneşli Gökyüzü */
+            background-size: cover;
+        }
+
+        .cloudy {
+            background-color: #B0C4DE; /* Açık Gri Mavi */
+            background-image: url('https://images.unsplash.com/photo-1518709263804-71740b2b8e7f'); /* Bulutlu Gökyüzü */
+            background-size: cover;
+        }
+
+        .rainy {
+            background-color: #808080; /* Gri */
+            background-image: url('https://images.unsplash.com/photo-1475571472927-3f6e3e3f5e7a'); /* Yağmurlu Gökyüzü */
+            background-size: cover;
+        }
+
+        .snowy {
+            background-color: #DCDCDC; /* Gri-Beyaz */
+            background-image: url('https://images.unsplash.com/photo-1544221142-302d79b89902'); /* Karla Kaplı Gökyüzü */
+            background-size: cover;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hava Durumu</h1>
+        <!-- Şehir Seçimi -->
         <select id="city-selector">
             <option value="Istanbul">İstanbul</option>
             <option value="Ankara">Ankara</option>
@@ -57,54 +109,74 @@
             <option value="London">Londra</option>
             <option value="Paris">Paris</option>
             <option value="New York">New York</option>
+            <option value="Hakkari">Hakkari</option> <!-- Hakkari'yi ekledik -->
         </select>
-        <img id="weather-icon" class="weather-icon" src="" alt="Weather Icon">
-        <div id="weather-info"></div>
+
+        <img id="weather-icon" class="weather-icon hover-effect" src="" alt="Weather Icon">
+        <div class="weather-info" id="weather-info"></div>
         <div id="temperature" class="temperature"></div>
-        <div id="feels-like" class="additional-info"></div>
-        <div id="wind-speed" class="additional-info"></div>
-        <div id="humidity" class="additional-info"></div>
+        <div id="feels-like" class="additional-info">
+            <i class="fas fa-thermometer-half"></i> <span>Hissedilen: </span>
+        </div>
+        <div id="wind-speed" class="additional-info">
+            <i class="fas fa-wind"></i> <span>Rüzgar Hızı: </span>
+        </div>
+        <div id="humidity" class="additional-info">
+            <i class="fas fa-tint"></i> <span>Nem Oranı: </span>
+        </div>
+
+        <!-- Hava Durumu Grafiği -->
         <canvas id="weather-chart"></canvas>
     </div>
 
     <script>
-        const apiKey = '29234e3918abf4ff5865f5d2e8cd2aa2';
+        // API Key ve Şehir Adı
+        const apiKey = '29234e3918abf4ff5865f5d2e8cd2aa2';  // Kendi API anahtarınızı ekleyin
         const citySelector = document.getElementById('city-selector');
-        let myChart;
-
+        const weatherChart = document.getElementById('weather-chart').getContext('2d');
+        
+        // Şehir Seçimi Dinleyicisi
         citySelector.addEventListener('change', function() {
-            fetchWeather(this.value);
+            const city = this.value;
+            fetchWeather(city);
         });
 
+        // Hava Durumunu API'den Al
         function fetchWeather(city) {
             const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
+
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
+                    const weather = data.weather[0].main.toLowerCase();
                     const temp = data.main.temp;
                     const feelsLike = data.main.feels_like;
                     const windSpeed = data.wind.speed;
                     const humidity = data.main.humidity;
                     const iconCode = data.weather[0].icon;
+                    const weatherIcon = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
                     const description = data.weather[0].description;
 
-                    document.getElementById('weather-icon').src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+                    // Hava Durumu İkonu ve Açıklamaları
+                    document.getElementById('weather-icon').src = weatherIcon;
                     document.getElementById('weather-info').innerText = description;
                     document.getElementById('temperature').innerText = `${temp}°C`;
                     document.getElementById('feels-like').innerText = `Hissedilen: ${feelsLike}°C`;
                     document.getElementById('wind-speed').innerText = `Rüzgar Hızı: ${windSpeed} m/s`;
                     document.getElementById('humidity').innerText = `Nem Oranı: ${humidity}%`;
+
+                    // Hava Durumu Grafiğini Güncelle
                     updateChart(temp, feelsLike, windSpeed, humidity);
+
+                    // Gökyüzü Efekti Güncelle
+                    updateSkyEffect(weather);
                 })
                 .catch(error => console.error('API veri çekme hatası:', error));
         }
 
+        // Grafik Verilerini Güncelle
         function updateChart(temp, feelsLike, windSpeed, humidity) {
-            if (myChart) {
-                myChart.destroy();
-            }
-            const ctx = document.getElementById('weather-chart').getContext('2d');
-            myChart = new Chart(ctx, {
+            const chart = new Chart(weatherChart, {
                 type: 'bar',
                 data: {
                     labels: ['Sıcaklık (°C)', 'Hissedilen (°C)', 'Rüzgar Hızı (m/s)', 'Nem Oranı (%)'],
@@ -112,6 +184,7 @@
                         label: 'Hava Durumu',
                         data: [temp, feelsLike, windSpeed, humidity],
                         backgroundColor: ['#ffdb4d', '#ff6666', '#66ccff', '#66ff66'],
+                        borderColor: ['#ffcc00', '#ff4d4d', '#4d94ff', '#4dff4d'],
                         borderWidth: 1
                     }]
                 },
@@ -126,6 +199,22 @@
             });
         }
 
+        // Gökyüzü Efektini Güncelle
+        function updateSkyEffect(weather) {
+            if (weather === 'clear') {
+                document.body.className = 'sunny';
+            } else if (weather === 'clouds') {
+                document.body.className = 'cloudy';
+            } else if (weather === 'rain') {
+                document.body.className = 'rainy';
+            } else if (weather === 'snow') {
+                document.body.className = 'snowy';
+            } else {
+                document.body.className = ''; // Varsayılan Arka Plan
+            }
+        }
+
+        // Sayfa Yüklendiğinde Varsayılan Şehri Göster
         fetchWeather('Istanbul');
     </script>
 </body>
