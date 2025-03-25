@@ -4,55 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hava Durumu</title>
-    <script>
-        async function fetchWeather(city) {
-            const apiKey = '29234e3918abf4ff5865f5d2e8cd2aa2'; // OpenWeather API Anahtarı
-            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
-            
-            document.getElementById("output").innerText = "Yükleniyor...";
-            
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                
-                if (response.ok) {
-                    const temp = data.main.temp;
-                    const description = data.weather[0].description;
-                    const iconCode = data.weather[0].icon;
-                    const weatherIcon = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-                    
-                    document.getElementById("output").innerHTML = 
-                        `<p>${city} için hava durumu:</p>
-                        <p>${description}</p>
-                        <p>Sıcaklık: ${temp}°C</p>
-                        <img src='${weatherIcon}' alt='Weather Icon'>`;
-                } else {
-                    document.getElementById("output").innerText = "Hava durumu alınamadı.";
-                }
-            } catch (error) {
-                console.error("Hata:", error);
-                document.getElementById("output").innerText = "Bağlantı hatası!";
-            }
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
         }
-    </script>
+        .container {
+            text-align: center;
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            width: 60%;
+        }
+        .weather-icon {
+            width: 120px;
+            height: 120px;
+        }
+        .temperature {
+            font-size: 36px;
+        }
+        .additional-info {
+            font-size: 20px;
+            margin-top: 15px;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        #weather-chart {
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hava Durumu</h1>
-    <select id="city-selector">
-        <option value="Istanbul">İstanbul</option>
-        <option value="Ankara">Ankara</option>
-        <option value="Izmir">İzmir</option>
-        <option value="London">Londra</option>
-        <option value="Paris">Paris</option>
-        <option value="New York">New York</option>
-        <option value="Hakkari">Hakkari</option>
-    </select>
-    <button onclick="fetchWeather(document.getElementById('city-selector').value)">Hava Durumunu Getir</button>
-    <div id="output"></div>
-    
+    <div class="container">
+        <h1>Hava Durumu</h1>
+        <select id="city-selector">
+            <option value="Istanbul">İstanbul</option>
+            <option value="Ankara">Ankara</option>
+            <option value="Izmir">İzmir</option>
+            <option value="London">Londra</option>
+            <option value="Paris">Paris</option>
+            <option value="New York">New York</option>
+        </select>
+        <img id="weather-icon" class="weather-icon" src="" alt="Weather Icon">
+        <div id="weather-info"></div>
+        <div id="temperature" class="temperature"></div>
+        <div id="feels-like" class="additional-info"></div>
+        <div id="wind-speed" class="additional-info"></div>
+        <div id="humidity" class="additional-info"></div>
+        <canvas id="weather-chart"></canvas>
+    </div>
+
     <script>
-        // Sayfa yüklendiğinde İstanbul'un hava durumu gösterilsin
-        fetchWeather("Istanbul");
+        const apiKey = '29234e3918abf4ff5865f5d2e8cd2aa2';
+        const citySelector = document.getElementById('city-selector');
+        let myChart;
+
+        citySelector.addEventListener('change', function() {
+            fetchWeather(this.value);
+        });
+
+        function fetchWeather(city) {
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const temp = data.main.temp;
+                    const feelsLike = data.main.feels_like;
+                    const windSpeed = data.wind.speed;
+                    const humidity = data.main.humidity;
+                    const iconCode = data.weather[0].icon;
+                    const description = data.weather[0].description;
+
+                    document.getElementById('weather-icon').src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+                    document.getElementById('weather-info').innerText = description;
+                    document.getElementById('temperature').innerText = `${temp}°C`;
+                    document.getElementById('feels-like').innerText = `Hissedilen: ${feelsLike}°C`;
+                    document.getElementById('wind-speed').innerText = `Rüzgar Hızı: ${windSpeed} m/s`;
+                    document.getElementById('humidity').innerText = `Nem Oranı: ${humidity}%`;
+                    updateChart(temp, feelsLike, windSpeed, humidity);
+                })
+                .catch(error => console.error('API veri çekme hatası:', error));
+        }
+
+        function updateChart(temp, feelsLike, windSpeed, humidity) {
+            if (myChart) {
+                myChart.destroy();
+            }
+            const ctx = document.getElementById('weather-chart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sıcaklık (°C)', 'Hissedilen (°C)', 'Rüzgar Hızı (m/s)', 'Nem Oranı (%)'],
+                    datasets: [{
+                        label: 'Hava Durumu',
+                        data: [temp, feelsLike, windSpeed, humidity],
+                        backgroundColor: ['#ffdb4d', '#ff6666', '#66ccff', '#66ff66'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        fetchWeather('Istanbul');
     </script>
 </body>
 </html>
